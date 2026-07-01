@@ -149,7 +149,7 @@ MIT License — see [`LICENSE`](LICENSE) for details. Use it, fork it, ship it.
 
 ---
 
-Made with 🎣 by [@realnishil](https://github.com/realnishil)
+Made by [@realnishil](https://github.com/realnishil)
 
 *Stay safe out there. Not every file is what it claims to be.*
 
