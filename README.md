@@ -1,72 +1,142 @@
-# FlagHunter
+```
+█████ █      ███   ████ █   █ █   █ █   █ █████ █████ ████
+█     █     █   █ █     █   █ █   █ ██  █   █   █     █   █
+████  █     █████ █ ███ █████ █   █ █ █ █   █   ████  ████
+█     █     █   █ █   █ █   █ █   █ █  ██   █   █     █ █
+█     █     █   █ █   █ █   █ █   █ █   █   █   █     █  █
+█     █████ █   █  ████ █   █  ███  █   █   █   █████ █   █
+```
 
-A single-file Python CLI tool for CTF / security-student file analysis.
-Point it at **any file** (image, PDF, archive, executable, random binary) and it will:
+<div align="center">
 
-- Identify the **real** file type from magic bytes (not just the extension) and flag mismatches
-- Compute MD5/SHA1/SHA256 hashes
-- Scan for **embedded/polyglot files** hidden mid-file
-- Detect **data appended after the file's real EOF marker** (a classic CTF trick — e.g. extra bytes after a PNG's `IEND` chunk)
-- Run **Shannon entropy analysis** (whole-file + sliding window) to flag likely encrypted/packed/compressed regions
-- Extract and classify **strings**: URLs, IPs, emails, and `flag{...}` / `CTF{...}` style patterns
-- Flag **malware-style indicators**: PDF `/JavaScript`, `/OpenAction`, Office macros (`vbaProject.bin`), suspicious archive members, PowerShell/shell patterns, obfuscation keywords, etc.
-- For images: pull **EXIF metadata** and run **LSB (least-significant-bit) steganography** extraction, auto-decoding any readable hidden text
-- For PDFs: pull metadata, page count, detect embedded files/JS/launch actions
-- For ZIP-based formats (docx/xlsx/pptx/jar/apk): list members, flag macros/scripts/executables inside
-- Auto-attempt **base64 / hex decoding** on any large encoded blobs found in the raw bytes
+### 🕵️ Static file forensics for CTFs — hidden data, steganography & malware indicators, all in one CLI report
 
-Output as a readable colored report, or `--json` for machine-readable output you can pipe into other tools/scripts.
+![Python](https://img.shields.io/badge/python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-informational?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
+![Made for](https://img.shields.io/badge/made%20for-CTFs-ff69b4?style=for-the-badge)
 
-## Usage
+</div>
+
+---
+
+## 🔍 What it does
+
+Point FlagHunter at **any file** — image, PDF, archive, executable, or unknown
+binary — and it digs through it looking for the things CTF challenge authors
+(and real attackers) like to hide:
+
+```
+$ python3 flaghunter.py mystery_file.png
+
+======================================================================
+FlagHunter Report: mystery_file.png
+======================================================================
+
+-- FLAGS / FINDINGS --
+  [!! MALWARE]     Suspicious indicator: PDF JavaScript action (can auto-run on open)
+  [HIDDEN DATA]    38 bytes of data found APPENDED after the file's real EOF marker
+  [HIDDEN DATA]    LSB extraction produced readable text: 'CTF{lsb_stego_found_you}'
+  [SUSPICIOUS]     Overall file entropy is very high (7.99/8.0)
+```
+
+> 🎯 In text-mode output, findings are **color-coded in your terminal**:
+> 🔴 red = `MALWARE`, 🟣 magenta = `HIDDEN DATA`, 🟡 yellow = `SUSPICIOUS`, 🔵 cyan = `INFO`
+
+---
+
+## ✨ Features
+
+| Category | What it catches |
+|---|---|
+| 🕵️ **File identity** | Real file type from magic bytes vs. the extension — catches disguised/masqueraded files |
+| 🔐 **Hashes** | MD5 / SHA1 / SHA256, instantly |
+| 🧩 **Polyglots** | Other file signatures buried mid-file |
+| 📎 **Appended data** | Bytes tacked on after a file's real EOF marker — the #1 classic CTF trick |
+| 📊 **Entropy analysis** | Whole-file + sliding-window, flags packed/encrypted/compressed regions |
+| 🖼️ **LSB steganography** | Extracts + auto-decodes hidden text from image pixel data |
+| 🏷️ **EXIF metadata** | GPS, comments, software tags — often overlooked |
+| 📄 **PDF internals** | `/JavaScript`, `/OpenAction`, `/Launch`, embedded files |
+| 🗜️ **Archive contents** | Office macros (`vbaProject.bin`), scripts/executables hidden in ZIP-based files |
+| 🚩 **String triage** | URLs, IPs, emails, and `flag{...}` / `CTF{...}` patterns, auto-extracted |
+| 🔓 **Auto-decoding** | Base64 / hex blobs decoded automatically if they look like text |
+
+---
+
+## 🚀 Quick start
 
 ```bash
+pip install Pillow numpy pypdf
+
 python3 flaghunter.py suspicious_file.png
 python3 flaghunter.py challenge.pdf --json
 ```
 
-## Requirements
+<div align="center">
 
-- Python 3.8+
-- `Pillow`, `numpy`, `pypdf` (all optional — the tool degrades gracefully and skips
-  image/PDF-specific checks if a library isn't installed; core analysis always works)
-- The `file` command (present by default on Linux/macOS) for cross-checking type detection
+| Flag | Meaning |
+|:---:|---|
+| 🔴 `MALWARE` | Indicator commonly tied to malicious files |
+| 🟣 `HIDDEN` | Concrete hidden data found |
+| 🟡 `SUSPICIOUS` | Worth a human look |
+| 🔵 `INFO` | General notes, no action needed |
 
-```bash
-pip install Pillow numpy pypdf
+</div>
+
+---
+
+## 🧠 How it works under the hood
+
+```
+ ┌────────────┐    ┌───────────────┐    ┌──────────────┐
+ │  Identify  │ →  │  Scan for     │ →  │  Entropy +   │
+ │  file type │    │  hidden data  │    │  strings     │
+ └────────────┘    └───────────────┘    └──────────────┘
+        │                  │                    │
+        ▼                  ▼                    ▼
+ ┌─────────────────────────────────────────────────────┐
+ │     Type-specific deep dive (image / PDF / zip)      │
+ └─────────────────────────────────────────────────────┘
+        │
+        ▼
+ ┌─────────────────────────────────────────────────────┐
+ │      Final report: sorted, flagged, actionable       │
+ └─────────────────────────────────────────────────────┘
 ```
 
-## How it flags things
+One readable Python file, organized into clear stages you can extend:
+`identify_file` → `scan_embedded_signatures` → `check_appended_data` →
+`entropy_analysis` → `analyze_strings` → `analyze_image` / `analyze_pdf` /
+`analyze_zip_based` → report.
 
-| Severity     | Meaning                                                              |
-|--------------|-----------------------------------------------------------------------|
-| `MALWARE`    | Indicator commonly associated with malicious files (auto-run actions, macros, obfuscation keywords, dropped executables) |
-| `HIDDEN`     | Concrete hidden data found (appended bytes, embedded files, decoded stego/base64/hex payloads, CTF flag patterns) |
-| `SUSPICIOUS` | Something worth a human look (extension mismatch, high entropy, unusual EXIF fields) |
-| `INFO`       | General notes, no action needed |
+See **[EXAMPLES.md](EXAMPLES.md)** for full real input/output samples (text + JSON).
 
-## Important notes / limitations
+---
 
-- This is a **static heuristic triage tool**, not an antivirus engine. A clean report
-  does not guarantee a file is safe, and a flag does not guarantee malicious intent —
-  always verify manually, especially before treating something as a real threat.
-- It **never executes** the file it analyzes.
-- Signature scanning only uses signatures ≥4 bytes for mid-file matches, to avoid
-  false positives inside naturally high-entropy data (compressed images, encrypted
-  blobs) where short byte sequences can appear by chance.
-- LSB steganography detection assumes the common "plain ASCII packed into RGB LSBs,
-  null-terminated" scheme used by most CTF stego challenges and tools like `zsteg`/
-  `stegsolve` presets. More exotic embedding orders (e.g. only 1 channel, custom bit
-  depth, encrypted payloads) won't be caught automatically — extend `lsb_analysis()`
-  if you need those.
+## ⚠️ Limitations
 
-## Extending it
+- Static heuristic triage tool — **not** an antivirus engine. A clean report
+  isn't a safety guarantee, and a flag isn't proof of malice.
+- Never executes the analyzed file.
+- LSB detection assumes the common "plain ASCII in RGB LSBs" scheme used by
+  most CTF stego tools — exotic embeddings need extending `lsb_analysis()`.
 
-The whole tool is one readable file (`flaghunter.py`), organized into clear stages
-(`identify_file`, `scan_embedded_signatures`, `check_appended_data`, `entropy_analysis`,
-`analyze_strings`, `analyze_image`, `analyze_pdf`, `analyze_zip_based`). Good next
-additions if you want to keep building this as a portfolio project:
+---
 
-- Chi-square LSB detection (proper statistical test, not just the bit-ratio heuristic)
-- Audio steganography (spectrogram + WAV LSB)
-- Volatility/PCAP integration for a "triage everything" mode
-- A plugin system so each file-type analyzer is a drop-in module
+## 🛣️ Roadmap ideas
+
+- [ ] Proper chi-square LSB statistical test
+- [ ] Audio steganography (spectrogram + WAV LSB)
+- [ ] PCAP / Volatility integration for full-triage mode
+- [ ] Plugin architecture — one module per file type
+
+---
+
+<div align="center">
+
+**Built for CTF players, by a CTF player.** 🚩
+
+If FlagHunter helped you snag a flag, ⭐ star the repo.
+
+</div>
