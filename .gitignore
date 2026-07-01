@@ -1,0 +1,48 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- Virtual environments ----
+venv/
+env/
+.venv/
+ENV/
+
+# ---- Packaging / tooling ----
+*.egg
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+
+# ---- FlagHunter-specific ----
+# Sample/test files used for manual testing - don't commit real or synthetic
+# malware, stego samples, or scan artifacts to the repo.
+test_*.png
+test_*.pdf
+test_*.txt
+test_*.zip
+out_*.txt
+out_*.json
+*.report.json
+
+# If you build a local samples/ folder for CTF challenge files you're testing against,
+# keep it out of version control (these can be large and/or sensitive).
+samples/
+scan_results/
