@@ -140,3 +140,17 @@ See **[EXAMPLES.md](EXAMPLES.md)** for full real input/output samples (text + JS
 If FlagHunter helped you snag a flag, ⭐ star the repo.
 
 </div>
+
+## 📜 License
+
+MIT License — see [`LICENSE`](LICENSE) for details. Use it, fork it, ship it.
+
+<div align="center">
+
+---
+
+Made with 🎣 by [@realnishil](https://github.com/realnishil)
+
+*Stay safe out there. Not every link is what it claims to be.*
+
+</div>
